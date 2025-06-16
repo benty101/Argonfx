@@ -1,60 +1,23 @@
-# argon_bot.py
-
-from telegram import Bot
-from notion_client import Client
-import time
+from telegram import Update
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 import os
 
-# === CONFIGURATION FROM ENV VARIABLES ===
-NOTION_TOKEN = os.getenv("NOTION_TOKEN")
-DATABASE_ID = os.getenv("DATABASE_ID")
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+# Get your Telegram Bot Token from the environment variable
+BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
 
-# === INITIALIZE CLIENTS ===
-notion = Client(auth=NOTION_TOKEN)
-bot = Bot(token=TELEGRAM_BOT_TOKEN)
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("✅ ArgonFX Bot is online and listening!")
 
-# === FORMAT TELEGRAM MESSAGE ===
-def format_trade_message(properties):
-    return f"""
-📉 ARGON FX SIGNAL – {properties['Date']['date']['start']}
+async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("🤖 ArgonFX Bot Status: LIVE")
 
-Pair: {properties['Pair']['title'][0]['plain_text']}
-Bias: {properties['Bias']['select']['name']}
-Entry: {properties['Entry']['number']}
-SL: {properties['SL']['number']}
-TP1: {properties['TP1']['number']}
-TP2: {properties['TP2']['number']}
-Model: {properties['Model']['rich_text'][0]['plain_text']} | Session: {properties['Session']['select']['name']}
-
-Status: {properties['Status']['select']['name']}
-Notes: {properties['Notes']['rich_text'][0]['plain_text'] if properties['Notes']['rich_text'] else ''}
-"""
-
-# === MAIN BOT FUNCTION ===
-def check_and_post():
-    response = notion.databases.query(database_id=DATABASE_ID)
-    for page in response['results']:
-        props = page['properties']
-        if props['Post to Telegram']['checkbox']:
-            message = format_trade_message(props)
-            bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
-
-            # Uncheck the box after posting
-            notion.pages.update(
-                page_id=page['id'],
-                properties={
-                    "Post to Telegram": {"checkbox": False}
-                }
-            )
-
-# === LOOP (runs every 10 min) ===
 if __name__ == "__main__":
-    while True:
-        try:
-            check_and_post()
-            time.sleep(600)
-        except Exception as e:
-            print("Error:", e)
-            time.sleep(60)
+    if not BOT_TOKEN:
+        print("ERROR: BOT_TOKEN not set.")
+        exit(1)
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("status", status))
+    print("Bot is running and polling for messages...")
+    app.run_polling()
+

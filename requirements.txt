@@ -1,1 +1,4 @@
-python-telegram-bot==20.7
+python-telegram-bot==13.15
+notion-client==2.2.1
+urllib3==1.26.18
+six==1.16.0

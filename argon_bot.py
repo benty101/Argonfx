@@ -1,23 +1,17 @@
-from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
-import os
+from telegram.ext import Updater, CommandHandler
 
-# Get your Telegram Bot Token from the environment variable
-BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
+# --- Your Telegram Bot Token ---
+TOKEN = "8010024494:AAGsa5y66io5gtPMRupxRY1no2t0aEb3TU0"
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("✅ ArgonFX Bot is online and listening!")
+def start(update, context):
+    update.message.reply_text("Bot is working! 🎉")
 
-async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🤖 ArgonFX Bot Status: LIVE")
+def main():
+    updater = Updater(TOKEN, use_context=True)
+    dp = updater.dispatcher
+    dp.add_handler(CommandHandler("start", start))
+    updater.start_polling()
+    updater.idle()
 
 if __name__ == "__main__":
-    if not BOT_TOKEN:
-        print("ERROR: BOT_TOKEN not set.")
-        exit(1)
-    app = ApplicationBuilder().token(BOT_TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("status", status))
-    print("Bot is running and polling for messages...")
-    app.run_polling()
-
+    main()

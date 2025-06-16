@@ -44,15 +44,30 @@ def fetch_new_trades():
 
 def format_trade(page):
     props = page.get("properties", {})
-    # Defensive checks to avoid NoneType errors
-    def safe_plain_text(prop, typ):
-        items = props.get(prop, {}).get(typ, [])
-        return items[0].get("plain_text", "") if items else ""
-    pair = safe_plain_text("Pair", "title") or "N/A"
-    bias = props.get("Bias", {}).get("select", {}).get("name", "")
-    entry = safe_plain_text("Entry", "rich_text")
-    sl = safe_plain_text("SL", "rich_text")
-    tp1 = safe_plain_text("TP1", "rich_text")
+
+    def safe_get(prop, typ):
+        try:
+            items = props.get(prop, {}).get(typ, [])
+            return items[0].get("plain_text", "")
+        except Exception:
+            return ""
+    
+    # Pair (title property)
+    pair = safe_get("Pair", "title") or "N/A"
+
+    # Bias (select property)
+    bias = ""
+    try:
+        bias_select = props.get("Bias", {}).get("select")
+        if bias_select:
+            bias = bias_select.get("name", "")
+    except Exception:
+        bias = ""
+
+    entry = safe_get("Entry", "rich_text")
+    sl = safe_get("SL", "rich_text")
+    tp1 = safe_get("TP1", "rich_text")
+
     msg = f"📊 {pair}\nBias: {bias}\nEntry: {entry}\nSL: {sl}\nTP1: {tp1}"
     return msg
 
